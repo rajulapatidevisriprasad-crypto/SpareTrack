@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SpareTrack</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<div id="modalsRoot"></div>
+
+<!-- Mobile nav overlay -->
+<div class="nav-overlay" id="navOverlay" onclick="closeMobileNav()"></div>
+
+<div class="app-shell">
+
+  <!-- ═══ SIDEBAR ════════════════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <div class="brand-icon" id="sidebarBrandIcon">🏍️</div>
+        <div class="brand-text">
+          <span id="sidebarShopName">SpareTrack</span>
+          <span class="brand-sub">Management System</span>
+        </div>
+      </div>
+      <button class="mobile-close-btn" onclick="closeMobileNav()">✕</button>
+    </div>
+
+    <!-- Global search -->
+    <div class="sidebar-search">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input id="globalSearch" placeholder="Search customers, bills…"
+               oninput="globalSearchDebounced()" autocomplete="off">
+      </div>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-section-title">Showroom</span>
+      <div class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">📊</span><span class="label">Dashboard</span>
+      </div>
+      <div class="nav-item" data-page="customers">
+        <span class="nav-icon">👥</span><span class="label">Customers</span>
+        <!-- <span class="nav-badge" id="pendingBadge"></span> -->
+      </div>
+      <div class="nav-item" data-page="billing">
+        <span class="nav-icon">🧾</span><span class="label">New Bill</span>
+      </div>
+      <div class="nav-item" data-page="bills">
+        <span class="nav-icon">📑</span><span class="label">All Bills</span>
+      </div>
+      <div class="nav-item" data-page="pending">
+        <span class="nav-icon">⏳</span><span class="label">Pending Payments</span>
+        <span class="nav-badge" id="pendingBadge2"></span>
+      </div>
+
+      <span class="nav-section-title">Inventory</span>
+      <div class="nav-item" data-page="companies">
+        <span class="nav-icon">🏭</span><span class="label">Companies</span>
+      </div>
+      <div class="nav-item" data-page="models">
+        <span class="nav-icon">🏍️</span><span class="label">Models</span>
+      </div>
+      <div class="nav-item" data-page="items">
+        <span class="nav-icon">⚙️</span><span class="label">Spare Parts</span>
+      </div>
+
+      <span class="nav-section-title">Analytics</span>
+      <div class="nav-item" data-page="history">
+        <span class="nav-icon">📋</span><span class="label">Parts History</span>
+      </div>
+      <div class="nav-item" data-page="reports">
+        <span class="nav-icon">📈</span><span class="label">Reports</span>
+      </div>
+      <div class="nav-item" data-page="settings">
+        <span class="nav-icon">⚙️</span><span class="label">Settings</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-info">
+        <div class="status-dot"></div>
+        <span>System Active</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ════════════════════════════════════════════════════════════ -->
+  <div class="main-area">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="openMobileNav()" aria-label="Menu">☰</button>
+        <div>
+          <div class="page-title" id="pageTitle">Dashboard</div>
+          <div class="page-subtitle" id="pageSubtitle">Today's performance overview</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" id="topbarAddBtn" onclick="topbarAdd()">+ Add New</button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-area">
+
+      <!-- ═══ DASHBOARD ════════════════════════════════════════════════ -->
+      <div class="page-section active" id="page-dashboard">
+        <div class="stats-grid" id="dashStatsGrid"></div>
+        <div class="dash-grid" style="margin-bottom:20px">
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-icon" style="background:rgba(79,70,229,0.1)">📈</div>Monthly Revenue (6 Months)</div>
+              <div class="chart-legend">
+                <span class="legend-dot" style="background:#4f46e5"></span>Revenue
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" id="monthlyChart"></div>
+            </div>
+          </div>
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-icon" style="background:rgba(245,158,11,0.1)">🏆</div>Top Selling Parts</div>
+            </div>
+            <div id="topItemsList"></div>
+          </div>
+        </div>
+        <div class="grid-2" style="gap:20px">
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-icon" style="background:rgba(239,68,68,0.1)">⚠️</div>Low Stock Alerts</div>
+              <span class="badge badge-warning" id="lowStockBadge">0</span>
+            </div>
+            <div id="lowStockBody" style="padding:0"></div>
+          </div>
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-icon" style="background:rgba(239,68,68,0.1)">⏳</div>Recent Pending Bills</div>
+              <button class="btn btn-ghost btn-sm" onclick="navigateTo('pending')">View All</button>
+            </div>
+            <div id="recentPendingBody" style="padding:0"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ CUSTOMERS ════════════════════════════════════════════════ -->
+      <div class="page-section" id="page-customers">
+        <div class="section-bar">
+          <div class="section-heading">👥 Customers <span class="count-chip" id="custCnt">0</span></div>
+          <div class="bar-actions">
+            <div class="search-bar">
+              <span class="search-icon">🔍</span>
+              <input id="custSearch" placeholder="Search name or mobile…" oninput="filterCustomers()">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openAddCustomer()">+ Add Customer</button>
+          </div>
+        </div>
+        <div class="table-card glass-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Customer</th><th>Mobile</th><th>City</th>
+                <th>Bills</th><th>Total Paid</th><th>Pending</th><th>Actions</th>
+              </tr></thead>
+              <tbody id="custTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ BILLING ═══════════════════════════════════════════════════ -->
+      <div class="page-section" id="page-billing">
+        <div class="billing-layout">
+          <!-- Left: form -->
+          <div class="billing-form-col">
+            <div class="glass-card">
+              <div class="card-header">
+                <div class="card-title">🧾 Bill Details</div>
+                <div style="font-family:'Poppins',sans-serif;font-size:12px;color:var(--primary);font-weight:700" id="billNoPreview">Bill # —</div>
+              </div>
+              <div class="card-body">
+                <div class="form-row">
+                  <!-- <div class="form-group">
+                      
+                    <label class="form-label">Customer *</label>
+                    <div style="position:relative">
+                      <input class="form-control" id="billCustSearch" placeholder="Type name or mobile…"
+                             oninput="searchCustomerForBill()" autocomplete="off">
+                      <div class="cust-dropdown" id="billCustDropdown"></div>
+                    </div>
+                    <input type="hidden" id="billCustId">
+                  </div> -->
+                  <div class="form-group">
+
+                        <label class="form-label">Customer Name *</label>
+
+                       <div style="position:relative">
+                       <input class="form-control"
+                      id="billCustSearch"
+                        placeholder="Enter customer name"
+                     oninput="searchCustomerForBill()"
+                     autocomplete="off">
+
+                 <div class="cust-dropdown"
+                   id="billCustDropdown">
+                </div>
+               </div>
+
+           <input type="hidden" id="billCustId">
+
+           </div>
+
+        <div class="form-group">
+
+  <label class="form-label">Mobile Number</label>
+
+  <input class="form-control"
+         id="billCustomerMobile"
+         placeholder="Enter mobile number">
+
+   </div>
+                  <div class="form-group">
+                    <label class="form-label">Bill Date *</label>
+                    <input class="form-control" type="date" id="billDate">
+                  </div>
+                </div>
+                <div id="billCustInfo" class="cust-info-strip" style="display:none"></div>
+              </div>
+            </div>
+
+            <div class="glass-card" style="margin-top:16px">
+              <div class="card-header">
+                <div class="card-title">📦 Bill Items</div>
+                <button class="btn btn-success btn-sm" onclick="addBillItem()">+ Add Item</button>
+              </div>
+              <div class="card-body" style="padding:0">
+                <div class="bill-items-wrap">
+                  <table class="bill-items-table">
+                    <thead><tr>
+                      <th style="width:40%">Item Name</th>
+                      <th style="width:15%">Qty</th>
+                      <th style="width:22%">Unit Price</th>
+                      <th style="width:18%">Total</th>
+                      <th style="width:5%"></th>
+                    </tr></thead>
+                    <tbody id="billItemsBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: summary -->
+          <div class="billing-summary-col">
+            <div class="glass-card billing-summary-card">
+              <div class="card-header">
+                <div class="card-title">💰 Summary</div>
+              </div>
+              <div class="card-body">
+                <div class="summary-row">
+                  <span>Subtotal</span>
+                  <span id="sumSubtotal">₹0.00</span>
+                </div>
+                <div class="form-group" style="margin:12px 0">
+                  <label class="form-label">Discount (₹)</label>
+                  <input class="form-control" type="number" id="billDiscount" value="0" min="0" oninput="recalcBill()">
+                </div>
+                <div class="summary-row summary-grand">
+                  <span>Grand Total</span>
+                  <span id="sumGrandTotal">₹0.00</span>
+                </div>
+                <div class="divider"></div>
+                <div class="form-group">
+                  <label class="form-label">Amount Paid (₹)</label>
+                  <input class="form-control" type="number" id="billAmountPaid" value="0" min="0" oninput="recalcBill()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Payment Method</label>
+                  <select class="form-control" id="billPayMethod">
+                    <option value="cash">💵 Cash</option>
+                    <option value="upi">📱 UPI</option>
+                    <option value="card">💳 Card</option>
+                    <option value="bank">🏦 Bank Transfer</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="summary-row summary-pending">
+                  <span>Pending Amount</span>
+                  <span id="sumPending">₹0.00</span>
+                </div>
+                <div class="summary-status" id="sumStatus">
+                  <span class="badge badge-warning">Pending</span>
+                </div>
+                <div class="form-group" style="margin-top:12px">
+                  <label class="form-label">Notes</label>
+                  <textarea class="form-control" id="billNotes" rows="2" placeholder="Optional notes…"></textarea>
+                </div>
+                <button class="btn btn-primary btn-full btn-lg" onclick="submitBill()" style="margin-top:8px">
+                  🧾 Generate Bill
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ALL BILLS ═════════════════════════════════════════════════ -->
+      <div class="page-section" id="page-bills">
+        <div class="section-bar">
+          <div class="section-heading">📑 All Bills <span class="count-chip" id="billsCnt">0</span></div>
+          <div class="bar-actions">
+            <select class="form-control" id="billsStatusFilter" onchange="loadBills()" style="width:140px;padding:8px 12px">
+              <option value="">All Status</option>
+              <option value="paid">Paid</option>
+              <option value="partial">Partial</option>
+              <option value="pending">Pending</option>
+            </select>
+            <div class="search-bar">
+              <span class="search-icon">🔍</span>
+              <input id="billsSearch" placeholder="Search bills…" oninput="filterBillsTable()">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="navigateTo('billing')">+ New Bill</button>
+          </div>
+        </div>
+        <div class="table-card glass-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Bill No</th><th>Date</th><th>Customer</th><th>Total</th>
+                <th>Paid</th><th>Pending</th><th>Status</th><th>Actions</th>
+              </tr></thead>
+              <tbody id="billsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PENDING PAYMENTS ══════════════════════════════════════════ -->
+      <div class="page-section" id="page-pending">
+        <div class="section-bar">
+          <div class="section-heading">⏳ Pending Payments <span class="count-chip" id="pendCnt">0</span></div>
+          <div class="bar-actions">
+            <div class="search-bar">
+              <span class="search-icon">🔍</span>
+              <input id="pendSearch" placeholder="Search…" oninput="filterPendingTable()">
+            </div>
+          </div>
+        </div>
+        <div class="table-card glass-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Bill No</th><th>Customer</th><th>Mobile</th><th>Date</th>
+                <th>Total</th><th>Paid</th><th>Pending</th><th>Status</th><th>Actions</th>
+              </tr></thead>
+              <tbody id="pendTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ COMPANIES ════════════════════════════════════════════════ -->
+      <div class="page-section" id="page-companies">
+        <div class="section-bar">
+          <div class="section-heading">🏭 Companies <span class="count-chip" id="coCnt">0</span></div>
+          <div class="bar-actions">
+            <div class="search-bar"><span class="search-icon">🔍</span>
+              <input id="coSearch" placeholder="Search companies…" oninput="filterCompanies()">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openAddCompany()">+ Add Company</button>
+          </div>
+        </div>
+        <div class="cards-grid" id="companiesGrid"></div>
+      </div>
+
+      <!-- ═══ MODELS ════════════════════════════════════════════════════ -->
+      <div class="page-section" id="page-models">
+        <div class="breadcrumb" id="modelBreadcrumb"></div>
+        <div class="section-bar">
+          <div class="section-heading">🏍️ Bike Models <span class="count-chip" id="moCnt">0</span></div>
+          <div class="bar-actions">
+            <select class="form-control" id="moCompanyFilter" onchange="loadModels()" style="width:180px;padding:8px 12px">
+              <option value="">All Companies</option>
+            </select>
+            <div class="search-bar"><span class="search-icon">🔍</span>
+              <input id="moSearch" placeholder="Search models…" oninput="filterModels()">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openAddModel()">+ Add Model</button>
+          </div>
+        </div>
+        <div class="cards-grid" id="modelsGrid"></div>
+      </div>
+
+      <!-- ═══ ITEMS ══════════════════════════════════════════════════════ -->
+      <div class="page-section" id="page-items">
+        <div class="breadcrumb" id="itemsBreadcrumb"></div>
+        <div class="section-bar">
+          <div class="section-heading">⚙️ Spare Parts <span class="count-chip" id="itemCnt">0</span></div>
+          <div class="bar-actions">
+            <select class="form-control" id="itemCompanyFilter" onchange="loadItemModels()" style="width:150px;padding:8px 12px">
+              <option value="">All Companies</option>
+            </select>
+            <select class="form-control" id="itemModelFilter" onchange="loadItems()" style="width:150px;padding:8px 12px">
+              <option value="">All Models</option>
+            </select>
+            <div class="search-bar"><span class="search-icon">🔍</span>
+              <input id="itemSearch" placeholder="Search parts…" oninput="filterItems()">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openAddItem()">+ Add Part</button>
+          </div>
+        </div>
+        <div class="parts-grid" id="itemsGrid"></div>
+      </div>
+
+      <!-- ═══ PARTS HISTORY ═════════════════════════════════════════════ -->
+      <div class="page-section" id="page-history">
+        <div class="section-bar"><div class="section-heading">📋 Parts Transaction History</div></div>
+        <div class="filter-bar">
+          <span class="filter-label">Date:</span>
+          <input type="date" class="form-control" id="histDate" style="width:180px" onchange="loadHistory()">
+          <button class="btn btn-ghost btn-sm" onclick="clearHistDate()">Clear</button>
+          <span class="filter-label" id="histCount" style="margin-left:auto">— records</span>
+        </div>
+        <div class="glass-card"><div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Part Name</th><th>Company</th><th>Model</th><th>Type</th><th>Qty</th><th>Revenue</th><th>Date & Time</th></tr></thead>
+            <tbody id="histTbody"></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ═══ REPORTS ═══════════════════════════════════════════════════ -->
+      <div class="page-section" id="page-reports">
+        <div class="section-bar"><div class="section-heading">📈 Reports & Analytics</div></div>
+        <div class="reports-controls glass-card" style="padding:20px;margin-bottom:20px">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Report Type</label>
+              <select class="form-control" id="reportType" onchange="onReportTypeChange()">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly (Last 7 Days)</option>
+                <option value="monthly" selected>Monthly (This Month)</option>
+                <option value="custom">Custom Date Range</option>
+                <option value="pending">Pending Payments</option>
+              </select>
+            </div>
+            <div class="form-group" id="reportDateRange" style="display:none">
+              <label class="form-label">Date Range</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input class="form-control" type="date" id="reportStart">
+                <span style="color:var(--text-muted)">to</span>
+                <input class="form-control" type="date" id="reportEnd">
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="loadReportData()">📊 Generate Report</button>
+            <button class="btn btn-info" onclick="downloadReportPDF()">📄 Download PDF</button>
+            <button class="btn btn-success" onclick="downloadReportExcel()">📊 Download Excel</button>
+          </div>
+        </div>
+        <div id="reportSummary" style="margin-bottom:20px"></div>
+        <div class="glass-card" id="reportTableCard" style="display:none">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Bill No</th><th>Date</th><th>Customer</th><th>Mobile</th>
+                <th>Total</th><th>Paid</th><th>Pending</th><th>Status</th><th>Actions</th>
+              </tr></thead>
+              <tbody id="reportTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SETTINGS ══════════════════════════════════════════════════ -->
+      <div class="page-section" id="page-settings">
+        <div class="settings-grid">
+          <!-- Shop Info -->
+          <div class="glass-card">
+            <div class="card-header"><div class="card-title">🏪 Shop Information</div></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Shop Name *</label>
+                <input class="form-control" id="stShopName" placeholder="Your showroom name">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Address</label>
+                <textarea class="form-control" id="stShopAddress" rows="2" placeholder="Shop address"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Mobile</label>
+                  <input class="form-control" id="stShopMobile" placeholder="+91 XXXXX XXXXX">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email</label>
+                  <input class="form-control" id="stShopEmail" type="email" placeholder="shop@email.com">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">GST Number (Optional)</label>
+                  <input class="form-control" id="stShopGst" placeholder="22AAAAA0000A1Z5">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Bill Prefix</label>
+                  <input class="form-control" id="stBillPrefix" placeholder="BILL">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Shop Logo</label>
+                <div class="file-upload">
+                  <input type="file" id="stLogoFile" accept="image/*">
+                  <div class="upload-icon">🖼️</div>
+                  <div class="upload-hint">Click to upload — <strong>PNG, JPG</strong></div>
+                  <img id="stLogoPreview" class="upload-preview">
+                </div>
+              </div>
+              <button class="btn btn-primary btn-full" onclick="saveSettings()">💾 Save Settings</button>
+            </div>
+          </div>
+
+          <!-- Backup -->
+          <div>
+            <div class="glass-card" style="margin-bottom:16px">
+              <div class="card-header"><div class="card-title">🗄️ Backup & Restore</div></div>
+              <div class="card-body">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+                  Create a backup of all your data or restore from a previous backup file.
+                </p>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <a href="http://localhost:5000/backup" class="btn btn-success btn-full">
+                    📥 Download Backup (.db)
+                  </a>
+                  <div>
+                    <label class="form-label" style="margin-bottom:8px">Restore from backup</label>
+                    <input type="file" id="restoreFile" accept=".db" class="form-control" style="margin-bottom:8px">
+                    <button class="btn btn-warning btn-full" onclick="restoreBackup()">📤 Restore Database</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- App info -->
+            <!-- <div class="glass-card">
+              <div class="card-header"><div class="card-title">ℹ️ System Info</div></div>
+              <div class="card-body">
+                <div class="info-list">
+                  <div class="info-row"><span>App Version</span><strong>2.0.0</strong></div>
+                  <div class="info-row"><span>Database</span><strong>SQLite</strong></div>
+                  <div class="info-row"><span>Backend</span><strong>Python Flask</strong></div>
+                  <div class="info-row"><span>Features</span><strong>Billing + Inventory</strong></div>
+                </div>
+                <div style="margin-top:16px;padding:12px;background:rgba(79,70,229,0.06);border-radius:10px;border:1px solid rgba(79,70,229,0.1)">
+                  <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px">WHATSAPP SHARING</div>
+                  <div style="font-size:12px;color:var(--text-secondary)">Open any bill and click "Share via WhatsApp" to send payment details to the customer.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> -->
+
+    </div><!-- /content-area -->
+  </div><!-- /main-area -->
+</div><!-- /app-shell -->
+
+<script src="app.js"></script>
+</body>
+</html>

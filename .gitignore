@@ -1,0 +1,11 @@
+backend/venv/
+backend/database.db
+backend/backups/
+backend/__pycache__/
+backend/static/images/*.jpg
+backend/static/images/*.png
+backend/static/images/*.webp
+node_modules/
+dist/
+*.pyc
+.DS_Store

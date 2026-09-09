@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SpareTrack's Flask backend runs inside the app itself on 127.0.0.1
+  (via Chaquopy) so it never touches the real internet. Plain HTTP is
+  only permitted to the loopback address so the WebView can call the
+  local API; all other traffic still requires HTTPS.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>
