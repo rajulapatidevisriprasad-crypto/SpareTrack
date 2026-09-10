@@ -91,13 +91,41 @@ function openMobileNav()  { document.getElementById('sidebar').classList.add('mo
 function closeMobileNav() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('navOverlay').classList.remove('open'); }
 
 // ── API ────────────────────────────────────────────────────────
-async function api(url, opts={}) {
-  try {
-    const r = await fetch(API+url, {headers:{'Content-Type':'application/json'}, ...opts});
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error || 'Request failed');
-    return data;
-  } catch(e) { throw e; }
+// async function api(url, opts={}) {
+//   try {
+//     const r = await fetch(API+url, {headers:{'Content-Type':'application/json'}, ...opts});
+//     const data = await r.json();
+//     if (!r.ok) throw new Error(data.error || 'Request failed');
+//     return data;
+//   } catch(e) { throw e; }
+// }
+async function api(url, opts = {}) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= 15; attempt++) {
+    try {
+      const r = await fetch(API + url, {
+        headers: { 'Content-Type': 'application/json' },
+        ...opts
+      });
+
+      const data = await r.json();
+
+      if (!r.ok) {
+        throw new Error(data.error || 'Request failed');
+      }
+
+      return data;
+    } catch (e) {
+      lastError = e;
+
+      if (attempt < 15) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 // ── Toast ──────────────────────────────────────────────────────

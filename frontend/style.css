@@ -1031,7 +1031,7 @@ input[type="date"].form-control { color-scheme: light; }
 }
 @media (max-width: 768px) {
   :root { --sidebar-w: 68px; }
-  .brand-text, .nav-item span.label, .sidebar-info span,
+  .brand-text, .sidebar-info span,
   .nav-section-title { display: none; }
   .nav-item { justify-content: center; padding: 12px; }
   .nav-icon { width: auto; font-size: 22px; }
