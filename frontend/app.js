@@ -39,8 +39,13 @@ function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTi
 
 // ── Navigation ─────────────────────────────────────────────────
 function initNav() {
-  document.querySelectorAll('.nav-item[data-page]').forEach(el => {
-    el.addEventListener('click', () => { navigateTo(el.dataset.page); closeMobileNav(); });
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const page = el.dataset.page;
+
+      navigateTo(page);
+      closeMobileNav();
+    });
   });
 }
 
