@@ -87,9 +87,24 @@ function topbarAdd() {
 }
 
 // Mobile nav
-function openMobileNav()  { document.getElementById('sidebar').classList.add('mobile-open'); document.getElementById('navOverlay').classList.add('open'); }
-function closeMobileNav() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('navOverlay').classList.remove('open'); }
+// function openMobileNav()  { document.getElementById('sidebar').classList.add('mobile-open'); document.getElementById('navOverlay').classList.add('open'); }
+// function closeMobileNav() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('navOverlay').classList.remove('open'); }
+// Mobile nav
+function openMobileNav() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('navOverlay');
 
+  sidebar.classList.add('mobile-open');
+  overlay.classList.add('open');
+}
+
+function closeMobileNav() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('navOverlay');
+
+  sidebar.classList.remove('mobile-open');
+  overlay.classList.remove('open');
+}
 // ── API ────────────────────────────────────────────────────────
 // async function api(url, opts={}) {
 //   try {
